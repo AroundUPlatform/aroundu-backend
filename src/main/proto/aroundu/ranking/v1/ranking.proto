@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package aroundu.ranking.v1;
+
+option java_multiple_files = true;
+option java_package = "com.aroundu.ranking.v1";
+
+// AroundU Ranking Engine — inspired by X's candidate-pipeline architecture.
+// Provides ranked job feeds for workers and worker recommendations for clients.
+service RankingService {
+  // Returns a ranked list of jobs for a worker based on skills, distance, budget, recency, etc.
+  rpc GetWorkerFeed(WorkerFeedRequest) returns (WorkerFeedResponse);
+
+  // Returns a ranked list of workers recommended for a specific job.
+  rpc GetWorkerRecommendations(WorkerRecommendationRequest) returns (WorkerRecommendationResponse);
+
+  // Records a user interaction event (view, bid, etc.) for future scoring signals.
+  rpc RecordInteraction(RecordInteractionRequest) returns (RecordInteractionResponse);
+}
+
+// ─── Worker Feed ────────────────────────────────────────────────────────────
+
+message WorkerFeedRequest {
+  string worker_id = 1;
+  double latitude = 2;
+  double longitude = 3;
+  double radius_km = 4;
+  int32 page = 5;
+  int32 page_size = 6;
+  repeated string exclude_job_ids = 7;
+}
+
+message WorkerFeedResponse {
+  repeated RankedJob jobs = 1;
+  int32 total_candidates = 2;
+  int32 total_filtered = 3;
+}
+
+message RankedJob {
+  string job_id = 1;
+  double rank_score = 2;
+  string title = 3;
+  double distance_km = 4;
+  double price_amount = 5;
+  string job_urgency = 6;
+  repeated string matched_skill_ids = 7;
+  JobScoreBreakdown breakdown = 8;
+}
+
+message JobScoreBreakdown {
+  double skill_score = 1;
+  double distance_score = 2;
+  double budget_score = 3;
+  double recency_score = 4;
+  double urgency_bonus = 5;
+  double popularity_score = 6;
+}
+
+// ─── Worker Recommendations ─────────────────────────────────────────────────
+
+message WorkerRecommendationRequest {
+  string job_id = 1;
+  string client_id = 2;
+  int32 limit = 3;
+}
+
+message WorkerRecommendationResponse {
+  repeated RankedWorker workers = 1;
+}
+
+message RankedWorker {
+  string worker_id = 1;
+  double match_score = 2;
+  double distance_km = 3;
+  double average_rating = 4;
+  bool is_verified = 5;
+  repeated string matched_skill_ids = 6;
+  WorkerScoreBreakdown breakdown = 7;
+}
+
+message WorkerScoreBreakdown {
+  double skill_match = 1;
+  double rating_score = 2;
+  double distance_score = 3;
+  double completion_rate = 4;
+  double response_rate = 5;
+  double repeat_bonus = 6;
+}
+
+// ─── Interactions ───────────────────────────────────────────────────────────
+
+message RecordInteractionRequest {
+  string worker_id = 1;
+  string job_id = 2;
+  InteractionType event_type = 3;
+}
+
+message RecordInteractionResponse {
+  bool success = 1;
+}
+
+enum InteractionType {
+  INTERACTION_TYPE_UNSPECIFIED = 0;
+  VIEWED = 1;
+  BID_PLACED = 2;
+  BID_ACCEPTED = 3;
+  BID_REJECTED = 4;
+}

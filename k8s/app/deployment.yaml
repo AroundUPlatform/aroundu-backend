@@ -103,6 +103,13 @@ spec:
                 secretKeyRef:
                   name: aroundu-secrets
                   key: PAYLOAD_ENCRYPTION_KEY
+            # Ranking Engine (Rust gRPC)
+            - name: RANKING_ENGINE_HOST
+              value: "ranking-engine-service"
+            - name: RANKING_ENGINE_PORT
+              value: "50052"
+            - name: RANKING_ENGINE_ENABLED
+              value: "true"
           resources:
             requests:
               cpu: 250m

@@ -128,7 +128,7 @@ Spring Boot Actuator + Micrometer automatically collect:
 
 ## Prometheus
 
-Config: [`monitoring/prometheus.yml`](monitoring/prometheus.yml)
+Config: [`monitoring/prometheus.yml`](../monitoring/prometheus.yml)
 
 - Scrapes `/actuator/prometheus` on `app:20232` every 10 seconds
 - Labels: `application=AroundU`, `environment=dev`

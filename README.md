@@ -5,7 +5,7 @@
 **Hyperlocal Physical Freelancing Platform — Backend API**
 
 [![Java 21](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
-[![Spring Boot 3.4](https://img.shields.io/badge/Spring%20Boot-3.4.5-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Spring Boot 3.5](https://img.shields.io/badge/Spring%20Boot-3.5.12-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)](https://redis.io/)
 [![License: Proprietary](https://img.shields.io/badge/License-Proprietary-blue)]()
@@ -33,6 +33,7 @@
 - [Circuit Breaker & Resilience](#circuit-breaker--resilience)
 - [Background Jobs](#background-jobs)
 - [Distributed Tracing & Metrics](#distributed-tracing--metrics)
+- [Ranking Engine Integration](#ranking-engine-integration)
 - [Future Scalability Plan](#future-scalability-plan)
 - [Contributing](#contributing)
 - [License](#license)
@@ -671,7 +672,7 @@ Worker requests feed ──► Redis GEORADIUS (geo:jobs:open)
 
 `DistanceUtils.haversine()` calculates great-circle distances between coordinates. Each job in the feed response includes a `distanceKm` field and an optional `popularityScore` based on bid count.
 
-> For full architectural detail, see [GEOSEARCH.md](GEOSEARCH.md).
+> For full architectural detail, see [GEOSEARCH.md](docs/GEOSEARCH.md).
 
 ---
 
@@ -850,6 +851,58 @@ Key metric categories:
 ### Grafana Dashboards
 
 Pre-provisioned dashboards are mounted into Grafana via Docker Compose at `monitoring/grafana/dashboards/`. Datasource and dashboard provisioning configuration is auto-loaded from `monitoring/grafana/provisioning/`.
+
+---
+
+## Ranking Engine Integration
+
+The backend integrates with the [AroundU Ranking Engine](https://github.com/AroundUPlatform/aroundu-ranking-engine) — a high-performance Rust-based gRPC service that provides ML-powered job–worker matching via a multi-stage candidate pipeline.
+
+### How It Works
+
+```
+┌─────────────────┐     gRPC (port 50052)     ┌─────────────────────┐
+│  Spring Boot    │ ◄──────────────────────► │  Ranking Engine     │
+│  Backend        │                           │  (Rust / tonic)     │
+│                 │   GetWorkerFeed           │                     │
+│  JobServiceImpl │──────────────────────────►│  Candidate Pipeline │
+│                 │   RankedFeedResponse      │  ┌─Retrieval       │
+│                 │◄──────────────────────────│  ├─Filtering        │
+│                 │                           │  ├─Scoring          │
+│                 │   RecordInteraction       │  └─Blending         │
+│                 │──────────────────────────►│                     │
+└─────────────────┘                           └─────────────────────┘
+```
+
+### Key Components
+
+| Component | Path | Purpose |
+|-----------|------|---------|
+| Proto definition | `src/main/proto/aroundu/ranking/v1/ranking.proto` | gRPC service contract (3 RPCs) |
+| gRPC config | `infrastructure/config/RankingEngineConfig.java` | Channel management, feature flag |
+| gRPC client | `infrastructure/ranking/RankingEngineClient.java` | Blocking stub with 5s deadline, graceful fallback |
+| Integration point | `job/service/impl/JobServiceImpl.getWorkerFeed()` | Ranking-first with local fallback |
+
+### Configuration
+
+```yaml
+ranking-engine:
+  host: ${RANKING_ENGINE_HOST:localhost}
+  port: ${RANKING_ENGINE_PORT:50052}
+  enabled: ${RANKING_ENGINE_ENABLED:false}   # Feature flag — false by default
+```
+
+When `enabled: false` or the ranking engine is unreachable, the backend falls back to its existing geo-search + skill-filter + sort pipeline — **zero downtime risk**.
+
+### Kubernetes
+
+Dedicated K8s manifests are provided in `k8s/ranking-engine/`:
+
+- **deployment.yaml** — Single replica with init container (wait-for-postgres), resource limits (256Mi / 500m CPU)
+- **service.yaml** — ClusterIP on port 50052 (`ranking-engine-service`)
+- **hpa.yaml** — Auto-scales 1–3 replicas based on CPU (70%) and memory (80%)
+
+The main app deployment (`k8s/app/deployment.yaml`) is pre-configured to connect to the ranking engine service.
 
 ---
 

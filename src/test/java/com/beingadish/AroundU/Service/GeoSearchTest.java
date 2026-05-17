@@ -110,6 +110,12 @@ class GeoSearchTest {
     private com.beingadish.AroundU.user.repository.ClientRepository clientRepository;
     @Mock
     private com.beingadish.AroundU.common.repository.SkillRepository skillRepository;
+    @Mock
+    private com.beingadish.AroundU.common.service.SkillService skillService;
+    @Mock
+    private com.beingadish.AroundU.user.service.WorkerPenaltyService workerPenaltyService;
+    @Mock
+    private com.beingadish.AroundU.infrastructure.ranking.RankingEngineClient rankingEngineClient;
 
     @InjectMocks
     private JobServiceImpl jobService;

@@ -37,6 +37,7 @@ import com.beingadish.AroundU.common.util.DistanceUtils;
 import com.beingadish.AroundU.common.util.PopularityUtils;
 import com.beingadish.AroundU.common.util.SortValidator;
 import com.beingadish.AroundU.user.service.WorkerPenaltyService;
+import com.beingadish.AroundU.infrastructure.ranking.RankingEngineClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
@@ -54,6 +55,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -94,6 +96,7 @@ public class JobServiceImpl implements JobService {
     private final ApplicationEventPublisher eventPublisher;
     private final CacheEvictionService cacheEvictionService;
     private final WorkerPenaltyService workerPenaltyService;
+    private final RankingEngineClient rankingEngineClient;
 
     @Override
     @Transactional
@@ -369,13 +372,6 @@ public class JobServiceImpl implements JobService {
         int page = Optional.ofNullable(request.getPage()).orElse(0);
         int size = Optional.ofNullable(request.getSize()).orElse(20);
 
-        Sort sort = SortValidator.buildMultiSort(
-                request.getSortBy(), request.getSortDirection(),
-                request.getSecondarySortBy(), request.getSecondarySortDirection(),
-                SortValidator.JOB_FIELDS);
-
-        Pageable pageable = PageRequest.of(page, size, sort);
-
         Double workerLat = request.getLatitude();
         Double workerLon = request.getLongitude();
 
@@ -385,8 +381,30 @@ public class JobServiceImpl implements JobService {
             workerLon = worker.getCurrentAddress() != null ? worker.getCurrentAddress().getLongitude() : null;
         }
 
+        // ── Try Ranking Engine (Rust gRPC) first ─────────────────────
+        if (rankingEngineClient.isAvailable()) {
+            RankingEngineClient.RankedFeedResult rankedResult = rankingEngineClient.getWorkerFeed(
+                    workerId, workerLat, workerLon, radius, page, size, Collections.emptyList());
+
+            if (rankedResult.isAvailable() && !rankedResult.getJobs().isEmpty()) {
+                log.debug("Using ranking engine results for worker {} feed ({} jobs)", workerId, rankedResult.getJobs().size());
+                Pageable pageable = PageRequest.of(page, size);
+                return new PageResponse<>(new PageImpl<>(rankedResult.getJobs(), pageable, rankedResult.getJobs().size()));
+            }
+            log.debug("Ranking engine returned empty results for worker {}, falling back to local", workerId);
+        }
+
+        // ── Fallback: existing local implementation ──────────────────
+
         final Double finalWorkerLat = workerLat;
         final Double finalWorkerLon = workerLon;
+
+        Sort sort = SortValidator.buildMultiSort(
+                request.getSortBy(), request.getSortDirection(),
+                request.getSecondarySortBy(), request.getSecondarySortDirection(),
+                SortValidator.JOB_FIELDS);
+
+        Pageable pageable = PageRequest.of(page, size, sort);
 
         List<Long> geoJobIds = jobGeoService.findNearbyOpenJobs(finalWorkerLat, finalWorkerLon, radius, size * 3);
 

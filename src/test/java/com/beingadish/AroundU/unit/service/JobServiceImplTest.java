@@ -23,6 +23,9 @@ import com.beingadish.AroundU.infrastructure.cache.CacheEvictionService;
 import com.beingadish.AroundU.location.service.JobGeoService;
 import com.beingadish.AroundU.infrastructure.metrics.MetricsService;
 import com.beingadish.AroundU.job.service.impl.JobServiceImpl;
+import com.beingadish.AroundU.infrastructure.ranking.RankingEngineClient;
+import com.beingadish.AroundU.common.service.SkillService;
+import com.beingadish.AroundU.user.service.WorkerPenaltyService;
 import com.beingadish.AroundU.fixtures.JobTestBuilder;
 import com.beingadish.AroundU.fixtures.TestFixtures;
 import io.micrometer.core.instrument.Counter;
@@ -75,6 +78,12 @@ class JobServiceImplTest {
     private ApplicationEventPublisher eventPublisher;
     @Mock
     private CacheEvictionService cacheEvictionService;
+    @Mock
+    private SkillService skillService;
+    @Mock
+    private WorkerPenaltyService workerPenaltyService;
+    @Mock
+    private RankingEngineClient rankingEngineClient;
 
     @InjectMocks
     private JobServiceImpl jobService;

@@ -32,6 +32,8 @@
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
         <lombok.version>1.18.44</lombok.version>
         <jackson-bom.version>2.21.1</jackson-bom.version>
+        <grpc.version>1.68.0</grpc.version>
+        <protobuf.version>4.28.3</protobuf.version>
     </properties>
 
     <dependencies>
@@ -189,9 +191,51 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
 
+        <!-- gRPC Client for Ranking Engine -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-protobuf</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-stub</artifactId>
+            <version>${grpc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${protobuf.version}</version>
+        </dependency>
+        <!-- Required for generated @Generated annotation -->
+        <dependency>
+            <groupId>javax.annotation</groupId>
+            <artifactId>javax.annotation-api</artifactId>
+            <version>1.3.2</version>
+        </dependency>
+        <!-- gRPC in-process testing -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-testing</artifactId>
+            <version>${grpc.version}</version>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
+        <extensions>
+            <extension>
+                <groupId>kr.motd.maven</groupId>
+                <artifactId>os-maven-plugin</artifactId>
+                <version>1.7.1</version>
+            </extension>
+        </extensions>
         <plugins>
             <!-- Single, consolidated compiler plugin with MapStruct + Lombok processors -->
             <plugin>
@@ -240,6 +284,27 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
 
+            <!-- Protobuf / gRPC code generation -->
+            <plugin>
+                <groupId>org.xolstice.maven.plugins</groupId>
+                <artifactId>protobuf-maven-plugin</artifactId>
+                <version>0.6.1</version>
+                <configuration>
+                    <protocArtifact>com.google.protobuf:protoc:${protobuf.version}:exe:${os.detected.classifier}</protocArtifact>
+                    <pluginId>grpc-java</pluginId>
+                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:${os.detected.classifier}</pluginArtifact>
+                    <protoSourceRoot>${project.basedir}/src/main/proto</protoSourceRoot>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>compile</goal>
+                            <goal>compile-custom</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- JaCoCo – code coverage -->
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -285,6 +350,7 @@
                                 <exclude>com/beingadish/AroundU/Entities/**</exclude>
                                 <exclude>com/beingadish/AroundU/Constants/**</exclude>
                                 <exclude>com/beingadish/AroundU/Security/**</exclude>
+                                <exclude>com/aroundu/ranking/v1/**</exclude>
                             </excludes>
                         </configuration>
                     </execution>

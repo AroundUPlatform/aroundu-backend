@@ -60,6 +60,11 @@ feature:
   enable-swagger: ${FEATURE_ENABLE_SWAGGER:true}
   enable-debug-security: ${FEATURE_ENABLE_DEBUG_SECURITY:false}
 
+ranking-engine:
+  host: ${RANKING_ENGINE_HOST:localhost}
+  port: ${RANKING_ENGINE_PORT:50052}
+  enabled: ${RANKING_ENGINE_ENABLED:false}
+
 management:
   endpoints:
     web:
