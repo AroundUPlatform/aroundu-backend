@@ -4,9 +4,9 @@
 # ──────────────────────────────────────────────────────────────
 
 # ── Stage 1: Build ────────────────────────────────────────────
-FROM amazoncorretto:21-alpine AS build
+FROM amazoncorretto:21 AS build
 
-RUN apk upgrade --no-cache
+RUN yum install -y tar gzip && yum clean all
 
 WORKDIR /app
 

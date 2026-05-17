@@ -2,6 +2,7 @@ package com.beingadish.AroundU.infrastructure.config;
 
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -24,10 +25,8 @@ public class RankingEngineConfig {
     private ManagedChannel channel;
 
     @Bean
+    @ConditionalOnProperty(prefix = "ranking-engine", name = "enabled", havingValue = "true")
     public ManagedChannel rankingEngineChannel() {
-        if (!enabled) {
-            return null;
-        }
         channel = ManagedChannelBuilder.forAddress(host, port)
                 .usePlaintext()
                 .keepAliveTime(30, TimeUnit.SECONDS)

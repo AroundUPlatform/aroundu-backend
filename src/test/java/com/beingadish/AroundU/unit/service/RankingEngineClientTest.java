@@ -10,6 +10,7 @@ import io.grpc.inprocess.InProcessChannelBuilder;
 import io.grpc.inprocess.InProcessServerBuilder;
 import io.grpc.stub.StreamObserver;
 import io.grpc.testing.GrpcCleanupRule;
+import org.springframework.beans.factory.ObjectProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -23,6 +24,15 @@ import static org.junit.jupiter.api.Assertions.*;
 @DisplayName("RankingEngineClient")
 class RankingEngineClientTest {
 
+    private static ObjectProvider<ManagedChannel> channelProvider(ManagedChannel channel) {
+        return new ObjectProvider<>() {
+            @Override
+            public ManagedChannel getIfAvailable() {
+                return channel;
+            }
+        };
+    }
+
     // ── Disabled client tests ─────────────────────────────────────
 
     @Nested
@@ -33,7 +43,7 @@ class RankingEngineClientTest {
 
         @BeforeEach
         void setUp() {
-            client = new RankingEngineClient(null, false);
+            client = new RankingEngineClient(channelProvider(null), false);
         }
 
         @Test
@@ -89,7 +99,7 @@ class RankingEngineClientTest {
             ManagedChannel channel = grpcCleanup.register(
                     InProcessChannelBuilder.forName(serverName).directExecutor().build());
 
-            client = new RankingEngineClient(channel, true);
+            client = new RankingEngineClient(channelProvider(channel), true);
         }
 
         @Test
@@ -155,7 +165,7 @@ class RankingEngineClientTest {
             ManagedChannel channel = grpcCleanup.register(
                     InProcessChannelBuilder.forName(serverName).directExecutor().build());
 
-            client = new RankingEngineClient(channel, true);
+            client = new RankingEngineClient(channelProvider(channel), true);
         }
 
         @Test

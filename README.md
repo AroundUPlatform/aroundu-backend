@@ -312,13 +312,13 @@ The `k8s/` directory contains production-grade Kubernetes manifests for deployin
 
 ### Prerequisites
 
-| Requirement | Detail |
-| ----------- | ------ |
-| EC2 Instance | Ubuntu 22.04+ or Amazon Linux 2023 |
-| Instance Type | t3.medium or larger (4 GB+ RAM recommended) |
-| Docker | Installed (`sudo apt install docker.io`) |
-| k3s | Installed with Traefik disabled |
-| Security Groups | Inbound: 22 (SSH), 80 (HTTP), 443 (HTTPS) |
+| Requirement     | Detail                                      |
+| --------------- | ------------------------------------------- |
+| EC2 Instance    | Ubuntu 22.04+ or Amazon Linux 2023          |
+| Instance Type   | t3.medium or larger (4 GB+ RAM recommended) |
+| Docker          | Installed (`sudo apt install docker.io`)    |
+| k3s             | Installed with Traefik disabled             |
+| Security Groups | Inbound: 22 (SSH), 80 (HTTP), 443 (HTTPS)   |
 
 ### 1. Install k3s
 
@@ -876,12 +876,12 @@ The backend integrates with the [AroundU Ranking Engine](https://github.com/Arou
 
 ### Key Components
 
-| Component | Path | Purpose |
-|-----------|------|---------|
-| Proto definition | `src/main/proto/aroundu/ranking/v1/ranking.proto` | gRPC service contract (3 RPCs) |
-| gRPC config | `infrastructure/config/RankingEngineConfig.java` | Channel management, feature flag |
-| gRPC client | `infrastructure/ranking/RankingEngineClient.java` | Blocking stub with 5s deadline, graceful fallback |
-| Integration point | `job/service/impl/JobServiceImpl.getWorkerFeed()` | Ranking-first with local fallback |
+| Component         | Path                                              | Purpose                                           |
+| ----------------- | ------------------------------------------------- | ------------------------------------------------- |
+| Proto definition  | `src/main/proto/aroundu/ranking/v1/ranking.proto` | gRPC service contract (3 RPCs)                    |
+| gRPC config       | `infrastructure/config/RankingEngineConfig.java`  | Channel management, feature flag                  |
+| gRPC client       | `infrastructure/ranking/RankingEngineClient.java` | Blocking stub with 5s deadline, graceful fallback |
+| Integration point | `job/service/impl/JobServiceImpl.getWorkerFeed()` | Ranking-first with local fallback                 |
 
 ### Configuration
 
@@ -889,7 +889,7 @@ The backend integrates with the [AroundU Ranking Engine](https://github.com/Arou
 ranking-engine:
   host: ${RANKING_ENGINE_HOST:localhost}
   port: ${RANKING_ENGINE_PORT:50052}
-  enabled: ${RANKING_ENGINE_ENABLED:false}   # Feature flag — false by default
+  enabled: ${RANKING_ENGINE_ENABLED:false} # Feature flag — false by default
 ```
 
 When `enabled: false` or the ranking engine is unreachable, the backend falls back to its existing geo-search + skill-filter + sort pipeline — **zero downtime risk**.

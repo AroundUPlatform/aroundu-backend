@@ -9,6 +9,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -23,6 +24,7 @@ import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWrite
 import com.beingadish.AroundU.infrastructure.security.CustomAccessDeniedHandler;
 import com.beingadish.AroundU.infrastructure.security.CustomAuthenticationEntryPoint;
 import com.beingadish.AroundU.infrastructure.security.JwtAuthenticationFilter;
+import com.beingadish.AroundU.infrastructure.security.PayloadEncryptionFilter;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,6 +56,7 @@ public class ProfileConfig {
 
     @Configuration
     @EnableWebSecurity
+    @EnableMethodSecurity(prePostEnabled = true)
     @RequiredArgsConstructor
     @Profile("prod")
     static class ProductionSecurityConfig {
@@ -73,6 +76,7 @@ public class ProfileConfig {
         };
 
         private final JwtAuthenticationFilter jwtAuthenticationFilter;
+        private final PayloadEncryptionFilter payloadEncryptionFilter;
         private final UserDetailsService userDetailsService;
 
         @Bean
@@ -126,6 +130,7 @@ public class ProfileConfig {
                     .anyRequest().authenticated()
                     )
                     .authenticationProvider(authenticationProvider())
+                    .addFilterBefore(payloadEncryptionFilter, UsernamePasswordAuthenticationFilter.class)
                     .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
             return http.build();
         }

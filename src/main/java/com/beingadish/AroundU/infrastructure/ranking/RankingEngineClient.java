@@ -7,6 +7,7 @@ import com.beingadish.AroundU.common.constants.enums.JobUrgency;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
@@ -28,9 +29,10 @@ public class RankingEngineClient {
     private final boolean enabled;
 
     public RankingEngineClient(
-            ManagedChannel rankingEngineChannel,
+            ObjectProvider<ManagedChannel> rankingEngineChannelProvider,
             @Qualifier("rankingEngineEnabled") boolean rankingEngineEnabled) {
         this.enabled = rankingEngineEnabled;
+        ManagedChannel rankingEngineChannel = rankingEngineChannelProvider.getIfAvailable();
         if (rankingEngineChannel != null) {
             this.stub = RankingServiceGrpc.newBlockingStub(rankingEngineChannel)
                     .withDeadlineAfter(5, TimeUnit.SECONDS);
