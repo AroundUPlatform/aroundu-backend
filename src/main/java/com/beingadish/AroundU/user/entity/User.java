@@ -3,6 +3,7 @@ package com.beingadish.AroundU.user.entity;
 import com.beingadish.AroundU.common.constants.enums.Currency;
 import com.beingadish.AroundU.common.entity.VerificationStatus;
 import com.beingadish.AroundU.location.entity.Address;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
@@ -57,6 +58,7 @@ public abstract class User {
 
     @NotNull
     @NotEmpty
+    @JsonIgnore
     private String hashedPassword;
 
     @Column(updatable = false, nullable = false)

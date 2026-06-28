@@ -16,6 +16,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,9 @@ import org.springframework.web.bind.annotation.RestController;
 import static com.beingadish.AroundU.common.constants.URIConstants.ADMIN_BASE;
 import com.beingadish.AroundU.common.constants.enums.JobStatus;
 import com.beingadish.AroundU.common.dto.ApiResponse;
+import com.beingadish.AroundU.common.util.PageResponse;
+import com.beingadish.AroundU.job.dto.JobSummaryDTO;
+import com.beingadish.AroundU.job.mapper.JobMapper;
 import com.beingadish.AroundU.job.repository.JobRepository;
 import com.beingadish.AroundU.user.repository.ClientRepository;
 import com.beingadish.AroundU.user.repository.WorkerRepository;
@@ -52,6 +56,7 @@ public class AdminController {
     private final JobRepository jobRepository;
     private final ClientRepository clientRepository;
     private final WorkerRepository workerRepository;
+    private final JobMapper jobMapper;
 
     @Value("${prometheus.url:http://prometheus:9090}")
     private String prometheusUrl;
@@ -80,7 +85,7 @@ public class AdminController {
     @Operation(summary = "List all jobs (admin)",
             description = "Returns a paginated list of all jobs, optionally filtered by statuses.",
             security = @SecurityRequirement(name = "bearerAuth"))
-    public ResponseEntity<ApiResponse<Object>> listJobs(
+    public ResponseEntity<ApiResponse<PageResponse<JobSummaryDTO>>> listJobs(
             @Parameter(description = "Comma-separated job statuses to filter")
             @RequestParam(required = false) List<String> statuses,
             @RequestParam(defaultValue = "0") int page,
@@ -88,13 +93,16 @@ public class AdminController {
 
         var pageable = PageRequest.of(page, Math.min(size, 100), Sort.by(Sort.Direction.DESC, "createdAt"));
 
+        Page<JobSummaryDTO> dtoPage;
         if (statuses != null && !statuses.isEmpty()) {
             var statusEnums = statuses.stream()
                     .map(s -> JobStatus.valueOf(s.toUpperCase()))
                     .collect(Collectors.toList());
-            return ResponseEntity.ok(ApiResponse.success(jobRepository.findByJobStatusIn(statusEnums, pageable)));
+            dtoPage = jobRepository.findByJobStatusIn(statusEnums, pageable).map(jobMapper::toSummaryDto);
+        } else {
+            dtoPage = jobRepository.findAll(pageable).map(jobMapper::toSummaryDto);
         }
-        return ResponseEntity.ok(ApiResponse.success(jobRepository.findAll(pageable)));
+        return ResponseEntity.ok(ApiResponse.success(new PageResponse<>(dtoPage)));
     }
 
     @GetMapping("/metrics/query")

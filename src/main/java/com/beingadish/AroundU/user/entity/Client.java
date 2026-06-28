@@ -2,6 +2,7 @@ package com.beingadish.AroundU.user.entity;
 
 import com.beingadish.AroundU.job.entity.Job;
 import com.beingadish.AroundU.location.entity.Address;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
@@ -34,6 +35,7 @@ public class Client extends User {
 
     // List of created jobs
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
     private List<Job> postedJobs;
 
     // List of saved addresses

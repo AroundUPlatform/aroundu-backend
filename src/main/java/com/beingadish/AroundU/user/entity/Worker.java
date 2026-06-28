@@ -2,6 +2,7 @@ package com.beingadish.AroundU.user.entity;
 
 import com.beingadish.AroundU.job.entity.Job;
 import com.beingadish.AroundU.review.entity.Review;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
@@ -29,6 +30,7 @@ public class Worker extends User {
     private Boolean deleted = false;
 
     @OneToMany(mappedBy = "assignedTo")
+    @JsonIgnore
     private List<Job> engagedJobList;
 
     private Double overallRating;
@@ -45,6 +47,7 @@ public class Worker extends User {
     private String payoutAccount;
 
     @OneToMany(mappedBy = "worker")
+    @JsonIgnore
     private List<Review> reviews;
 
     // ── Cancellation penalty fields ───────────────────────────

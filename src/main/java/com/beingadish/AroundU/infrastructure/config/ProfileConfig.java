@@ -94,13 +94,15 @@ public class ProfileConfig {
         }
 
         @Bean
-        public SecurityFilterChain productionFilterChain(HttpSecurity http) throws Exception {
+        public SecurityFilterChain productionFilterChain(HttpSecurity http,
+                                                         CustomAccessDeniedHandler accessDeniedHandler,
+                                                         CustomAuthenticationEntryPoint authenticationEntryPoint) throws Exception {
             http
                     .csrf(AbstractHttpConfigurer::disable)
                     .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                     .exceptionHandling(exception -> exception
-                    .accessDeniedHandler(new CustomAccessDeniedHandler())
-                    .authenticationEntryPoint(new CustomAuthenticationEntryPoint())
+                    .accessDeniedHandler(accessDeniedHandler)
+                    .authenticationEntryPoint(authenticationEntryPoint)
                     )
                     .headers(headers -> headers
                     .contentSecurityPolicy(csp -> csp.policyDirectives("default-src 'self'; object-src 'none'; frame-ancestors 'none'; upgrade-insecure-requests"))

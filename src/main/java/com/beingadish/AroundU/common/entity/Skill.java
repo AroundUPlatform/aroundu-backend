@@ -1,5 +1,6 @@
 package com.beingadish.AroundU.common.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
@@ -47,6 +48,7 @@ public class Skill {
 
     @ManyToMany(mappedBy = "skillSet")
     @Builder.Default
+    @JsonIgnore
     private Set<Job> jobs = new HashSet<>();
 
     @Override

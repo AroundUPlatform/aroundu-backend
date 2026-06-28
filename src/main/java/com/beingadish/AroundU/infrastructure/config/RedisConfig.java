@@ -2,6 +2,7 @@ package com.beingadish.AroundU.infrastructure.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -31,16 +32,32 @@ public class RedisConfig {
     public static final String CACHE_USER_PROFILE = "user:profile";
     public static final String CACHE_WORKER_SKILLS = "worker:skills";
 
+    /**
+     * Single shared cache serializer. Built once and reused across every cache
+     * configuration and the RedisTemplate, instead of rebuilding an ObjectMapper
+     * per cache.
+     */
+    private final GenericJackson2JsonRedisSerializer redisSerializer = buildRedisSerializer();
+
     // Create properly configured serializer
-    private GenericJackson2JsonRedisSerializer redisSerializer() {
+    private static GenericJackson2JsonRedisSerializer buildRedisSerializer() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
         mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-        mapper.activateDefaultTyping(
-                mapper.getPolymorphicTypeValidator(),
-                ObjectMapper.DefaultTyping.NON_FINAL
-        );
+        // Restrict polymorphic deserialization to our own types plus JDK
+        // collections and java.time, rather than the permissive default
+        // validator. Closes the default-typing deserialization-gadget risk while
+        // still round-tripping every cached DTO (all under
+        // com.beingadish.AroundU.* / java.*). The serialized format is unchanged,
+        // so pre-existing cache entries still deserialize.
+        BasicPolymorphicTypeValidator ptv = BasicPolymorphicTypeValidator.builder()
+                .allowIfSubType("com.beingadish.AroundU.")
+                .allowIfSubType("java.util.")
+                .allowIfSubType("java.time.")
+                .build();
+
+        mapper.activateDefaultTyping(ptv, ObjectMapper.DefaultTyping.NON_FINAL);
 
         return new GenericJackson2JsonRedisSerializer(mapper);
     }
@@ -53,7 +70,7 @@ public class RedisConfig {
                         RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer())
                 )
                 .serializeValuesWith(
-                        RedisSerializationContext.SerializationPair.fromSerializer(redisSerializer())
+                        RedisSerializationContext.SerializationPair.fromSerializer(redisSerializer)
                 )
                 .disableCachingNullValues();
     }
@@ -77,7 +94,7 @@ public class RedisConfig {
     @Bean
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory) {
 
-        GenericJackson2JsonRedisSerializer serializer = redisSerializer();
+        GenericJackson2JsonRedisSerializer serializer = redisSerializer;
 
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
