@@ -33,7 +33,7 @@ public final class JobTestBuilder {
     private Client createdBy = TestFixtures.client();
     private Worker assignedTo = null;
     private LocalDateTime createdAt = LocalDateTime.now();
-    private LocalDateTime updatedAt = LocalDateTime.now();
+    private final LocalDateTime updatedAt = LocalDateTime.now();
 
     private JobTestBuilder() {
     }

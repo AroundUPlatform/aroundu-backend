@@ -1,9 +1,9 @@
 package com.beingadish.AroundU.infrastructure.ranking;
 
 import com.aroundu.ranking.v1.*;
-import com.beingadish.AroundU.job.dto.JobSummaryDTO;
-import com.beingadish.AroundU.common.dto.PriceDTO;
 import com.beingadish.AroundU.common.constants.enums.JobUrgency;
+import com.beingadish.AroundU.common.dto.PriceDTO;
+import com.beingadish.AroundU.job.dto.JobSummaryDTO;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 import lombok.extern.slf4j.Slf4j;
@@ -54,8 +54,8 @@ public class RankingEngineClient {
      * @return ranked jobs as JobSummaryDTOs, or empty list if the engine is unavailable
      */
     public RankedFeedResult getWorkerFeed(Long workerId, Double latitude, Double longitude,
-                                           Double radiusKm, int page, int pageSize,
-                                           List<String> excludeJobIds) {
+                                          Double radiusKm, int page, int pageSize,
+                                          List<String> excludeJobIds) {
         if (!isAvailable()) {
             return RankedFeedResult.unavailable();
         }
@@ -198,10 +198,21 @@ public class RankingEngineClient {
             return new RankedFeedResult(false, Collections.emptyList(), 0, 0);
         }
 
-        public boolean isAvailable() { return available; }
-        public List<JobSummaryDTO> getJobs() { return jobs; }
-        public int getTotalCandidates() { return totalCandidates; }
-        public int getTotalFiltered() { return totalFiltered; }
+        public boolean isAvailable() {
+            return available;
+        }
+
+        public List<JobSummaryDTO> getJobs() {
+            return jobs;
+        }
+
+        public int getTotalCandidates() {
+            return totalCandidates;
+        }
+
+        public int getTotalFiltered() {
+            return totalFiltered;
+        }
     }
 
     /**
@@ -224,7 +235,12 @@ public class RankingEngineClient {
             return new RankedWorkerResult(false, Collections.emptyList());
         }
 
-        public boolean isAvailable() { return available; }
-        public List<RankedWorker> getWorkers() { return workers; }
+        public boolean isAvailable() {
+            return available;
+        }
+
+        public List<RankedWorker> getWorkers() {
+            return workers;
+        }
     }
 }

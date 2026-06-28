@@ -90,7 +90,7 @@ public final class TestDataBuilder {
         private Client client = TestFixtures.client();
         private Worker worker = TestFixtures.worker();
         private Double amount = 500.0;
-        private PaymentMode paymentMode = PaymentMode.ESCROW;
+        private final PaymentMode paymentMode = PaymentMode.ESCROW;
         private PaymentStatus status = PaymentStatus.ESCROW_LOCKED;
 
         public PaymentBuilder withId(Long id) {

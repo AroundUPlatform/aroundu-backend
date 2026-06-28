@@ -40,18 +40,19 @@ public class ChatController {
         if (auth != null && auth.getPrincipal() instanceof UserPrincipal up) {
             return up.getId();
         }
-        return Long.parseLong(auth.getName());
+
+        throw new IllegalStateException("User not authenticated");
     }
 
     private String principalRole() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth == null) {
-            return "UNKNOWN";
+        if (auth != null && auth.getAuthorities() != null) {
+            return auth.getAuthorities().stream()
+                    .map(a -> a.getAuthority().replace("ROLE_", ""))
+                    .findFirst()
+                    .orElse("UNKNOWN");
         }
-        return auth.getAuthorities().stream()
-                .map(a -> a.getAuthority().replace("ROLE_", ""))
-                .findFirst()
-                .orElse("UNKNOWN");
+        throw new IllegalStateException("User not authenticated");
     }
 
     @PostMapping("/jobs/{jobId}/messages")

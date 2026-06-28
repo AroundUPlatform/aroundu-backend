@@ -127,6 +127,6 @@ class SkillServiceTest {
         skillService.suggestSkills("plu", 50);
 
         verify(skillRepository).suggestByName(eq("plu"), argThat(p
-                -> ((Pageable) p).getPageSize() == 20));
+                -> p.getPageSize() == 20));
     }
 }

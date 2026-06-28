@@ -78,7 +78,7 @@ class RateLimitAspectTest {
 
         // Wire up join point → method signature
         lenient().when(joinPoint.getSignature()).thenReturn(methodSignature);
-        lenient().when(methodSignature.getDeclaringType()).thenReturn((Class) FakeController.class);
+        lenient().when(methodSignature.getDeclaringType()).thenReturn(FakeController.class);
         lenient().when(methodSignature.getName()).thenReturn("createJob");
         try {
             lenient().when(joinPoint.proceed()).thenReturn("OK");
